@@ -1,12 +1,6 @@
-FROM python:3.11-slim
+FROM postgres:15
 
-WORKDIR /app
+# Copias tus scripts SQL de inicialización
+COPY init/ /docker-entrypoint-initdb.d/
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . /app
-
-ENV PYTHONUNBUFFERED=1
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 5432
