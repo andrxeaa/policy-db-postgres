@@ -86,7 +86,7 @@ Todo archivo dentro de ``/init/`` se ejecuta automáticamente al crear el conten
 
 Si corres varias veces los scripts, podrías duplicar datos → por eso el seed.sql se genera limpio cada vez.
 
-Para performance, las inserciones se agrupan en un único ``INSERT ... VALUES (...), (...), ....``
+Para performance, las inserciones se agrupan en un único ``INSERT ... VALUES (...), (...), ...``.
 
 - En local → usas docker-compose.dev.yml.
 - En AWS → decides:
