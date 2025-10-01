@@ -1,6 +1,6 @@
 CREATE TABLE product (
   id SERIAL PRIMARY KEY,
-  code VARCHAR(50) NOT NULL UNIQUE,
+  code VARCHAR(50) NOT NULL UNIQUE,       -- Identificador alfanumérico (ej: PRD001)
   name VARCHAR(255) NOT NULL,
   description TEXT,
   product_type VARCHAR(50),
@@ -11,8 +11,8 @@ CREATE TABLE policy (
   id SERIAL PRIMARY KEY,
   policy_number VARCHAR(100) NOT NULL UNIQUE,
   customer_id INTEGER NOT NULL,  -- referencia lógica a microservicio Customer
-  product_id INTEGER NOT NULL REFERENCES product(id) ON DELETE RESTRICT,
-  agent_id INTEGER,               -- referencia lógica a microservicio Agent
+  product_id VARCHAR(50) NOT NULL REFERENCES product(code) ON DELETE RESTRICT, -- ahora apunta a 'code'
+  agent_id VARCHAR(50),          -- referencia lógica a microservicio Agent
   start_date DATE,
   end_date DATE,
   sum_insured NUMERIC(14,2),
