@@ -49,9 +49,9 @@ def generate_seed(num_products=10, num_policies=50, coverages_per_policy=(1, 3),
         policy_rows = []
         for i in range(1, num_policies + 1):
             policy_number = f"POL-{i:06d}"
-            customer_id = random.randint(1, 1000)
-            product_id = random.randint(1, num_products)
-            agent_id = random.randint(1, 50)
+            customer_id = random.randint(1, 4000)
+            product_id = f"'PRD{random.randint(1, num_products):03d}'"
+            agent_id = f"'AGT{random.randint(1, 50):03d}'"
             start_date = fake.date_between(start_date="-2y", end_date="today")
             end_date = fake.date_between(start_date=start_date, end_date="+1y")
             sum_insured = round(random.uniform(10000, 100000), 2)
@@ -87,4 +87,4 @@ def generate_seed(num_products=10, num_policies=50, coverages_per_policy=(1, 3),
 
 if __name__ == "__main__":
     # Ajusta parámetros aquí:
-    generate_seed(num_products=50, num_policies=20000, coverages_per_policy=(1, 3))
+    generate_seed(num_products=15, num_policies=20000, coverages_per_policy=(1, 3))
