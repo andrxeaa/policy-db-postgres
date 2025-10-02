@@ -34,3 +34,17 @@ CREATE TABLE policy_coverage (
 );
 
 CREATE INDEX idx_policycoverage_policy_id ON policy_coverage(policy_id);
+
+CREATE TABLE beneficiary (
+    id BIGSERIAL PRIMARY KEY,
+    policy_id BIGINT NOT NULL,
+    client_id BIGINT NOT NULL,            -- referencia lógica al microservicio de clientes
+    full_name VARCHAR(255) NOT NULL,      -- nombre del beneficiario
+    relationship VARCHAR(50) NOT NULL,    -- Ej: hijo, cónyuge, padre
+    percentage NUMERIC(5,2),              -- opcional: % de la suma asegurada
+    contact_info TEXT,                    -- opcional: datos de contacto
+    
+    CONSTRAINT fk_beneficiary_policy FOREIGN KEY (policy_id) REFERENCES policy(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_beneficiary_policy_id ON beneficiary(policy_id);

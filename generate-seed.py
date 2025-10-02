@@ -16,31 +16,14 @@ def batch_insert(table, columns, rows, f, batch_size=500):
         values = ",\n".join(batch)
         f.write(f"INSERT INTO {table} ({', '.join(columns)}) VALUES\n{values};\n\n")
 
-def generate_seed(num_products=10, num_policies=50, coverages_per_policy=(1, 3), output_file=output_path):
+
+def append_seed(num_policies=50, coverages_per_policy=(1, 3), beneficiaries_per_policy=(0, 2), output_file=output_path):
     """
-    Genera un archivo seed.sql con datos fake para las tablas:
-    product, policy y policy_coverage, usando inserts agrupados.
+    Agrega inserts de policy, policy_coverage y beneficiary al final de seed.sql
+    (sin tocar los productos que ya están en el archivo).
     """
 
-    # Prepara archivo
-    with open(output_file, "w", encoding="utf-8") as f:
-
-        # --------------------
-        # Tabla product
-        # --------------------
-        f.write("-- Insertar productos\n")
-        product_rows = []
-        for i in range(1, num_products + 1):
-            code = f"PRD{i:03d}"
-            name = fake.word().capitalize() + " " + fake.word().capitalize()
-            description = fake.sentence().replace("'", "''")
-            product_type = random.choice(["LIFE", "AUTO", "HOME", "HEALTH"])
-            base_premium = round(random.uniform(50, 500), 2)
-
-            product_rows.append(
-                f"('{code}', '{name}', '{description}', '{product_type}', {base_premium})"
-            )
-        batch_insert("product", ["code", "name", "description", "product_type", "base_premium"], product_rows, f)
+    with open(output_file, "w", encoding="utf-8") as f:  # 👈 append, no overwrite
 
         # --------------------
         # Tabla policy
@@ -50,7 +33,7 @@ def generate_seed(num_products=10, num_policies=50, coverages_per_policy=(1, 3),
         for i in range(1, num_policies + 1):
             policy_number = f"POL-{i:06d}"
             customer_id = random.randint(1, 4000)
-            product_id = f"'PRD{random.randint(1, num_products):03d}'"
+            product_code = f"'PRD{random.randint(1, 15):03d}'"  # 👈 suponiendo 15 productos ya en seed.sql
             agent_id = f"'AGT{random.randint(1, 50):03d}'"
             start_date = fake.date_between(start_date="-2y", end_date="today")
             end_date = fake.date_between(start_date=start_date, end_date="+1y")
@@ -59,9 +42,14 @@ def generate_seed(num_products=10, num_policies=50, coverages_per_policy=(1, 3),
             status = random.choice(["ACTIVE", "CANCELLED", "EXPIRED"])
 
             policy_rows.append(
-                f"('{policy_number}', {customer_id}, {product_id}, {agent_id}, '{start_date}', '{end_date}', {sum_insured}, {premium}, '{status}')"
+                f"('{policy_number}', {customer_id}, {product_code}, {agent_id}, '{start_date}', '{end_date}', {sum_insured}, {premium}, '{status}')"
             )
-        batch_insert("policy", ["policy_number", "customer_id", "product_id", "agent_id", "start_date", "end_date", "sum_insured", "premium", "status"], policy_rows, f)
+        batch_insert(
+            "policy",
+            ["policy_number", "customer_id", "product_id", "agent_id", "start_date", "end_date", "sum_insured", "premium", "status"],
+            policy_rows,
+            f,
+        )
 
         # --------------------
         # Tabla policy_coverage
@@ -80,11 +68,42 @@ def generate_seed(num_products=10, num_policies=50, coverages_per_policy=(1, 3),
                     f"({policy_id}, '{coverage_code}', '{coverage_name}', {coverage_limit}, {deductible})"
                 )
                 coverage_id += 1
-        batch_insert("policy_coverage", ["policy_id", "coverage_code", "coverage_name", "coverage_limit", "deductible"], coverage_rows, f)
+        batch_insert(
+            "policy_coverage",
+            ["policy_id", "coverage_code", "coverage_name", "coverage_limit", "deductible"],
+            coverage_rows,
+            f,
+        )
 
-    print(f"✅ Archivo {output_file} generado con {num_products} productos, {num_policies} pólizas y coberturas asociadas (inserts agrupados).")
+        # --------------------
+        # Tabla beneficiary
+        # --------------------
+        f.write("-- Insertar beneficiarios\n")
+        beneficiary_rows = []
+        beneficiary_id = 1
+        for policy_id in range(1, num_policies + 1):
+            for _ in range(random.randint(*beneficiaries_per_policy)):
+                client_id = random.randint(1, 4000)  # ref lógica a otro microservicio
+                full_name = fake.name().replace("'", "''")
+                relationship = random.choice(["HIJO", "HIJA", "CONYUGE", "PADRE", "MADRE", "HERMANO", "HERMANA", "ABUELO", "ABUELA"])
+                percentage = round(random.uniform(10, 100), 2)
+                contact_info = fake.phone_number().replace("'", "''")
+
+                beneficiary_rows.append(
+                    f"({policy_id}, {client_id}, '{full_name}', '{relationship}', {percentage}, '{contact_info}')"
+                )
+                beneficiary_id += 1
+        if beneficiary_rows:
+            batch_insert(
+                "beneficiary",
+                ["policy_id", "client_id", "full_name", "relationship", "percentage", "contact_info"],
+                beneficiary_rows,
+                f,
+            )
+
+    print(f"✅ Datos de policies, coverages y beneficiaries agregados en {output_file}.")
 
 
 if __name__ == "__main__":
     # Ajusta parámetros aquí:
-    generate_seed(num_products=15, num_policies=20000, coverages_per_policy=(1, 3))
+    append_seed(num_policies=20000, coverages_per_policy=(1, 3), beneficiaries_per_policy=(0, 2))
